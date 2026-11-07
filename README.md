@@ -77,6 +77,15 @@ npm run build
 
 Automated Stellar network calls are mocked.
 
+## Testnet rehearsal evidence
+
+On 2026-11-07, BorderFlow completed a controlled Testnet XLM payout rehearsal for 0.1 XLM using transaction
+`83637b6c316c06cf09f536efd2319da95b3910ac11966aaf4af253f386fa8776` on ledger `5607997`.
+
+- [Stellar Expert Testnet transaction](https://stellar.expert/explorer/testnet/tx/83637b6c316c06cf09f536efd2319da95b3910ac11966aaf4af253f386fa8776)
+- Testnet only; no real funds were used.
+- This is not production validation.
+
 ## Limitations
 
 - Testnet only
