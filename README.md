@@ -46,6 +46,8 @@ npm run dev
 
 Configure an explicitly Testnet-only signing secret. BorderFlow does not create or fund Stellar accounts.
 
+The public browser demo cannot call settlement routes. Those routes are administrator-only and require a server-side bearer token. See [DEPLOYMENT.md](DEPLOYMENT.md).
+
 ## Environment
 
 | Variable | Purpose |
@@ -55,6 +57,8 @@ Configure an explicitly Testnet-only signing secret. BorderFlow does not create 
 | `STELLAR_SOURCE_SECRET` | Server-only signing secret |
 | `STELLAR_EXPLORER_BASE_URL` | Optional Testnet explorer base |
 | `BORDERFLOW_DATABASE_PATH` | Optional SQLite database location |
+| `BORDERFLOW_ADMIN_TOKEN` | Server-only administrator bearer token (minimum 32 characters) |
+| `BORDERFLOW_MAX_PAYOUT_XLM` | Maximum XLM accepted per Testnet payout (defaults to `10`) |
 
 Never use a `NEXT_PUBLIC_*` variable for a signing secret.
 
@@ -65,6 +69,8 @@ Never use a `NEXT_PUBLIC_*` variable for a signing secret.
 - `POST /api/payouts/:id/reconcile`
 
 The baseline accepts native `XLM` only. A payout request requires a recipient name, Stellar destination address, amount, asset code, and idempotency key. Reusing a key with changed payout data returns HTTP 409.
+
+Every route requires `Authorization: Bearer $BORDERFLOW_ADMIN_TOKEN`. Never put this token in client-side code.
 
 ## Quality checks
 

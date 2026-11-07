@@ -5,8 +5,11 @@ BorderFlow is a cross-border payout operations layer with Stellar Testnet settle
 ```text
 Browser
   |
-  | POST /api/payouts
+  | public demo only (no settlement credential)
   v
+Operator-controlled client
+  | Authorization: Bearer <server-managed token>
+  | POST /api/payouts
 Next.js server
   |-- SQLite payout/idempotency state
   |-- Stellar SDK transaction construction/signing
@@ -30,9 +33,9 @@ SQLite is the baseline authority for payout state. Browser storage remains demo-
 
 ## Settlement states
 
-`draft -> pending -> submitted -> confirmed`
+`draft -> pending -> processing -> submitted -> confirmed`
 
-Submission or reconciliation errors may produce `failed`. A transaction submitted successfully is reconciled by its stored hash rather than browser state.
+The signed transaction hash is stored before submission. Deterministic submission or reconciliation errors may produce `failed`. An ambiguous transport failure produces `submission_unknown` and blocks automatic retry, while retaining the hash for reconciliation. A transaction submitted successfully is reconciled by its stored hash rather than browser state.
 
 ## Reconciliation
 
@@ -41,6 +44,8 @@ Submission or reconciliation errors may produce `failed`. A transaction submitte
 ## Idempotency
 
 A payout API request uses a caller-provided idempotency key. Reusing it with the same normalized payload returns the existing payout. Reusing it with changed payout data returns HTTP 409.
+
+Creation and the transition into transaction processing use SQLite uniqueness and a conditional atomic update. Concurrent requests cannot both claim the same pending payout.
 
 ## Current limitations
 
@@ -51,3 +56,5 @@ A payout API request uses a caller-provided idempotency key. Reusing it with the
 - No production USDC support
 - No Soroban contract
 - Pre-production; no formal audit
+- Single-instance SQLite deployment only
+- In-process rate limiting requires an edge limit for production

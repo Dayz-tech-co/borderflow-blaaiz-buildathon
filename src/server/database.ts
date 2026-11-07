@@ -2,7 +2,7 @@ import Database from "better-sqlite3";
 import path from "node:path";
 import fs from "node:fs";
 
-export type PayoutStatus = "draft" | "pending" | "submitted" | "confirmed" | "failed";
+export type PayoutStatus = "draft" | "pending" | "processing" | "submission_unknown" | "submitted" | "confirmed" | "failed";
 
 export interface PayoutRecord {
   id: string;
@@ -31,6 +31,7 @@ export function getDatabase(filename = databasePath): Database.Database {
   fs.mkdirSync(path.dirname(filename), { recursive: true });
   const db = new Database(filename);
   db.pragma("journal_mode = WAL");
+  db.pragma("busy_timeout = 5000");
   db.exec(`
     CREATE TABLE IF NOT EXISTS payouts (
       id TEXT PRIMARY KEY,

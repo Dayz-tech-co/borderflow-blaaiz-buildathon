@@ -23,15 +23,9 @@ export function payloadHash(input: PayoutInput): string {
 export function createPendingPayout(input: PayoutInput, db = getDatabase()) {
   const now = new Date().toISOString();
   const hash = payloadHash(input);
-  const existing = db.prepare("SELECT payloadHash FROM payouts WHERE idempotencyKey = ?").get(input.idempotencyKey.trim()) as { payloadHash: string } | undefined;
-  if (existing) {
-    if (existing.payloadHash !== hash) return { conflict: true as const };
-    return { payout: findPayout(input.idempotencyKey.trim(), db), conflict: false as const };
-  }
-
   const id = randomUUID();
   db.prepare(`
-    INSERT INTO payouts (
+    INSERT OR IGNORE INTO payouts (
       id, idempotencyKey, recipientName, destinationAddress, assetCode, assetIssuer, amount,
       network, status, txHash, ledger, feeStroops, failureReason, submittedAt, confirmedAt,
       reconciledAt, createdAt, updatedAt, payloadHash
@@ -41,7 +35,23 @@ export function createPendingPayout(input: PayoutInput, db = getDatabase()) {
     input.assetCode.trim().toUpperCase(), null, input.amount.trim(), "testnet", "pending",
     null, null, null, null, null, null, null, now, now, hash,
   );
-  return { payout: findPayout(id, db), conflict: false as const };
+  const stored = db.prepare("SELECT payloadHash FROM payouts WHERE idempotencyKey = ?").get(input.idempotencyKey.trim()) as { payloadHash: string };
+  if (stored.payloadHash !== hash) return { conflict: true as const };
+  return { payout: findPayout(input.idempotencyKey.trim(), db), conflict: false as const };
+}
+
+export function claimPendingPayout(id: string, db = getDatabase()): boolean {
+  const now = new Date().toISOString();
+  return db.prepare(
+    "UPDATE payouts SET status = 'processing', updatedAt = ? WHERE id = ? AND status = 'pending'",
+  ).run(now, id).changes === 1;
+}
+
+export function markPrepared(id: string, hash: string, db = getDatabase()): boolean {
+  const now = new Date().toISOString();
+  return db.prepare(
+    "UPDATE payouts SET txHash = ?, updatedAt = ? WHERE id = ? AND status = 'processing' AND txHash IS NULL",
+  ).run(hash, now, id).changes === 1;
 }
 
 export function findPayout(idOrKey: string, db = getDatabase()) {
@@ -75,13 +85,19 @@ export function markSubmitted(id: string, hash: string, ledger: number | null, f
   const now = new Date().toISOString();
   db.prepare(`
     UPDATE payouts SET status = 'submitted', txHash = ?, ledger = ?, feeStroops = ?,
-      submittedAt = ?, updatedAt = ?, failureReason = NULL WHERE id = ?
+      submittedAt = ?, updatedAt = ?, failureReason = NULL WHERE id = ? AND status = 'processing'
   `).run(hash, ledger, fee, now, now, id);
 }
 
 export function markFailed(id: string, reason: string, db = getDatabase()) {
   const now = new Date().toISOString();
   db.prepare("UPDATE payouts SET status = 'failed', failureReason = ?, updatedAt = ? WHERE id = ?").run(reason, now, id);
+}
+
+export function markSubmissionUnknown(id: string, db = getDatabase()) {
+  const now = new Date().toISOString();
+  db.prepare("UPDATE payouts SET status = 'submission_unknown', failureReason = ?, updatedAt = ? WHERE id = ? AND status = 'processing'")
+    .run("Transaction submission outcome is unknown; manual operator review is required.", now, id);
 }
 
 export function markReconciled(id: string, state: "confirmed" | "failed" | "missing", result?: { ledger?: number | null; feeCharged?: number | null; failureReason?: string }, db = getDatabase()) {

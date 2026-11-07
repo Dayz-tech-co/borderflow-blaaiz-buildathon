@@ -5,7 +5,6 @@ import { ArrowDownLeft, ArrowRight, BarChart3, Calculator, Check, ChevronRight, 
 import { COUNTRIES, CURRENCIES } from "@/lib/demo-data";
 import { usePayouts } from "@/hooks/use-payouts";
 import type { CalculatorValues, Payout, PayoutStatus } from "@/lib/types";
-import { StellarPayout } from "@/components/stellar-payout";
 
 type View = "dashboard" | "calculator" | "create" | "history";
 const currency = (value: number, code: string) => new Intl.NumberFormat("en", { style: "currency", currency: code, maximumFractionDigits: code === "NGN" ? 0 : 2 }).format(value);
@@ -39,7 +38,6 @@ export function BorderFlowApp() {
         {view === "dashboard" && <Dashboard payouts={payouts} volume={volume} ready={ready} go={go} open={setSelected} />}
         {view === "calculator" && <PayoutCalculator onCreate={() => go("create")} />}
         {view === "create" && <>
-          <StellarPayout />
           <CreatePayout addPayout={(p) => { addPayout(p); setSelected(p); }} />
         </>}
         {view === "history" && <TransactionHistory payouts={payouts} ready={ready} open={setSelected} reset={reset} />}

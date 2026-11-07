@@ -5,6 +5,7 @@ import {
   isValidAddress,
   parsePositiveAmount,
   reconcileTransaction,
+  validatePayoutAmount,
 } from "./stellar";
 
 describe("Stellar configuration and validation", () => {
@@ -28,6 +29,11 @@ describe("Stellar configuration and validation", () => {
     expect(() => parsePositiveAmount("NaN")).toThrow();
   });
 
+  it("enforces the configured payout ceiling", () => {
+    expect(validatePayoutAmount("1", { BORDERFLOW_MAX_PAYOUT_XLM: "1" })).toBe("1");
+    expect(() => validatePayoutAmount("1.0000001", { BORDERFLOW_MAX_PAYOUT_XLM: "1" })).toThrow(/maximum/i);
+  });
+
   it("rejects malformed Stellar addresses", () => {
     expect(isValidAddress("not-an-address")).toBe(false);
   });
@@ -49,5 +55,10 @@ describe("Stellar configuration and validation", () => {
       ledger: 12345,
       feeCharged: 100,
     });
+  });
+
+  it("treats Horizon errors as pending without exposing its response", async () => {
+    const fetcher = async () => new Response("upstream secret detail", { status: 503 });
+    await expect(reconcileTransaction("a".repeat(64), "https://example.test", fetcher)).resolves.toEqual({ state: "pending" });
   });
 });

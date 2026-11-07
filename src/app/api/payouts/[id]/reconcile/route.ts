@@ -1,8 +1,16 @@
 import { NextResponse } from "next/server";
 import { findPayout, markReconciled } from "@/server/payouts";
 import { getStellarConfig, reconcileTransaction } from "@/server/stellar";
+import { checkMutationRateLimit, isAdminAuthorized, SecurityConfigurationError } from "@/server/security";
 
-export async function POST(_request: Request, context: { params: Promise<{ id: string }> }) {
+export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
+  try {
+    if (!isAdminAuthorized(request)) return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  } catch (error) {
+    return NextResponse.json({ error: error instanceof SecurityConfigurationError ? "Payout administration is unavailable." : "Unauthorized." }, { status: error instanceof SecurityConfigurationError ? 503 : 401 });
+  }
+  const rate = checkMutationRateLimit(request);
+  if (!rate.allowed) return NextResponse.json({ error: "Too many management requests." }, { status: 429, headers: { "Retry-After": String(rate.retryAfter) } });
   const { id } = await context.params;
   const payout = findPayout(id);
   if (!payout) return NextResponse.json({ error: "Payout not found." }, { status: 404 });

@@ -30,6 +30,9 @@ export function getStellarConfig(env: Record<string, string | undefined> = proce
   const network = env.STELLAR_NETWORK;
   if (network !== "testnet") throw new Error("STELLAR_NETWORK must be testnet.");
   const horizonUrl = env.STELLAR_HORIZON_URL ?? "https://horizon-testnet.stellar.org";
+  let parsedHorizon: URL;
+  try { parsedHorizon = new URL(horizonUrl); } catch { throw new Error("Invalid STELLAR_HORIZON_URL."); }
+  if (parsedHorizon.protocol !== "https:") throw new Error("STELLAR_HORIZON_URL must use HTTPS.");
   const sourceSecret = env.STELLAR_SOURCE_SECRET;
   if (!sourceSecret) throw new Error("STELLAR_SOURCE_SECRET is required.");
   if (!StrKey.isValidEd25519SecretSeed(sourceSecret)) throw new Error("Invalid Stellar source secret.");
@@ -45,6 +48,17 @@ export function parsePositiveAmount(value: string | number): string {
   if (!/^(?:0|[1-9]\d*)(?:\.\d{1,7})?$/.test(text)) throw new Error("Amount must be numeric with at most 7 decimal places.");
   if (Number(text) <= 0) throw new Error("Amount must be positive.");
   return text;
+}
+
+export function validatePayoutAmount(value: string | number, env: Record<string, string | undefined> = process.env): string {
+  const amount = parsePositiveAmount(value);
+  const maximum = parsePositiveAmount(env.BORDERFLOW_MAX_PAYOUT_XLM ?? "10");
+  const toStroops = (text: string) => {
+    const [whole, fraction = ""] = text.split(".");
+    return BigInt(whole) * BigInt(10_000_000) + BigInt(fraction.padEnd(7, "0"));
+  };
+  if (toStroops(amount) > toStroops(maximum)) throw new Error(`Amount exceeds the configured maximum of ${maximum} XLM.`);
+  return amount;
 }
 
 export function explorerTransactionUrl(hash: string, baseUrl?: string): string {
