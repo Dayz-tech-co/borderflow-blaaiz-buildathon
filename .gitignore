@@ -5,3 +5,7 @@ out/
 !.env.example
 *.tsbuildinfo
 .vercel/
+data/*.db
+data/*.sqlite*
+*.key
+*.secret
