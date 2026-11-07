@@ -59,6 +59,8 @@ The public browser demo cannot call settlement routes. Those routes are administ
 | `BORDERFLOW_DATABASE_PATH` | Optional SQLite database location |
 | `BORDERFLOW_ADMIN_TOKEN` | Server-only administrator bearer token (minimum 32 characters) |
 | `BORDERFLOW_MAX_PAYOUT_XLM` | Maximum XLM accepted per Testnet payout (defaults to `10`) |
+| `BORDERFLOW_SETTLEMENT_ENABLED` | Explicit settlement gate; defaults to disabled in deployment configuration |
+| `BORDERFLOW_BACKUP_DIRECTORY` | Absolute directory for verified SQLite backups |
 
 Never use a `NEXT_PUBLIC_*` variable for a signing secret.
 
@@ -70,7 +72,9 @@ Never use a `NEXT_PUBLIC_*` variable for a signing secret.
 
 The baseline accepts native `XLM` only. A payout request requires a recipient name, Stellar destination address, amount, asset code, and idempotency key. Reusing a key with changed payout data returns HTTP 409.
 
-Every route requires `Authorization: Bearer $BORDERFLOW_ADMIN_TOKEN`. Never put this token in client-side code.
+Every payout management route requires `Authorization: Bearer $BORDERFLOW_ADMIN_TOKEN`. Never put this token in client-side code.
+
+`GET /api/health` and `GET /api/ready` are intentionally public, read-only operational checks. They expose no payout or credential data.
 
 ## Quality checks
 

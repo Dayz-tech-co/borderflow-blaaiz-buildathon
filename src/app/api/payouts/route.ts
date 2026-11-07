@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { buildNativePayment, getStellarConfig, isValidAddress, submitTransaction, validatePayoutAmount } from "@/server/stellar";
 import { claimPendingPayout, createPendingPayout, findPayout, markFailed, markPrepared, markSubmissionUnknown, markSubmitted } from "@/server/payouts";
 import { checkMutationRateLimit, isAdminAuthorized, readBoundedJson, SecurityConfigurationError } from "@/server/security";
+import { assertSettlementReady, operationalLog } from "@/server/operations";
 
 function authorize(request: Request): NextResponse | null {
   try {
@@ -13,7 +14,14 @@ function authorize(request: Request): NextResponse | null {
 
 export async function POST(request: Request) {
   const unauthorized = authorize(request);
-  if (unauthorized) return unauthorized;
+  if (unauthorized) {
+    operationalLog("warn", "payout.authorization_denied");
+    return unauthorized;
+  }
+  try { assertSettlementReady(); } catch {
+    operationalLog("warn", "payout.settlement_unavailable");
+    return NextResponse.json({ error: "Settlement is unavailable." }, { status: 503 });
+  }
   const rate = checkMutationRateLimit(request);
   if (!rate.allowed) return NextResponse.json({ error: "Too many payout requests." }, { status: 429, headers: { "Retry-After": String(rate.retryAfter) } });
 
@@ -56,6 +64,7 @@ export async function POST(request: Request) {
     if (!markPrepared(result.payout.id, expectedHash)) throw new Error("Unable to reserve transaction hash.");
   } catch {
     markFailed(result.payout.id, "Unable to prepare Stellar transaction.");
+    operationalLog("error", "payout.preparation_failed", { payoutId: result.payout.id });
     return NextResponse.json({ error: "Unable to prepare payout." }, { status: 502 });
   }
 
@@ -64,12 +73,15 @@ export async function POST(request: Request) {
     if (!submission.submitted || !("hash" in submission) || !submission.hash) {
       const reason = "failureReason" in submission && typeof submission.failureReason === "string" ? submission.failureReason : "Stellar transaction rejected";
       markFailed(result.payout.id, reason);
+      operationalLog("warn", "payout.submission_rejected", { payoutId: result.payout.id });
       return NextResponse.json(findPayout(result.payout.id), { status: 502 });
     }
     markSubmitted(result.payout.id, submission.hash, submission.ledger, submission.feeCharged);
+    operationalLog("info", "payout.submitted", { payoutId: result.payout.id });
     return NextResponse.json(findPayout(result.payout.id));
   } catch {
     markSubmissionUnknown(result.payout.id);
+    operationalLog("error", "payout.submission_unknown", { payoutId: result.payout.id });
     return NextResponse.json({ error: "Transaction submission outcome is unknown; operator review is required." }, { status: 502 });
   }
 }

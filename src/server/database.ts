@@ -25,9 +25,11 @@ export interface PayoutRecord {
   updatedAt: string;
 }
 
-const databasePath = process.env.BORDERFLOW_DATABASE_PATH ?? path.join(process.cwd(), "data", "borderflow.sqlite");
+export function getDatabasePath(env: Record<string, string | undefined> = process.env) {
+  return env.BORDERFLOW_DATABASE_PATH ?? path.join(process.cwd(), "data", "borderflow.sqlite");
+}
 
-export function getDatabase(filename = databasePath): Database.Database {
+export function getDatabase(filename = getDatabasePath()): Database.Database {
   fs.mkdirSync(path.dirname(filename), { recursive: true });
   const db = new Database(filename);
   db.pragma("journal_mode = WAL");

@@ -31,6 +31,8 @@ Stellar records settlement as a native XLM payment and provides transaction evid
 
 SQLite is the baseline authority for payout state. Browser storage remains demo-only and is never trusted as chain status.
 
+The deployment topology is deliberately one Node.js process and one persistent disk. Public liveness and readiness endpoints do not expose payout data. Settlement is disabled by configuration until all server-only Testnet settings are valid.
+
 ## Settlement states
 
 `draft -> pending -> processing -> submitted -> confirmed`

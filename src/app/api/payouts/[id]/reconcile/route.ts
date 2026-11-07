@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { findPayout, markReconciled } from "@/server/payouts";
 import { getStellarConfig, reconcileTransaction } from "@/server/stellar";
 import { checkMutationRateLimit, isAdminAuthorized, SecurityConfigurationError } from "@/server/security";
+import { operationalLog } from "@/server/operations";
 
 export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
   try {
@@ -24,6 +25,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     else if (result.state === "failed") markReconciled(id, "failed", result);
     return NextResponse.json(findPayout(id));
   } catch {
+    operationalLog("error", "payout.reconciliation_failed", { payoutId: id });
     return NextResponse.json({ error: "Unable to reconcile payout at this time." }, { status: 502 });
   }
 }
