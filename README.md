@@ -90,6 +90,8 @@ New demo payouts intentionally use a neutral `1.0` placeholder rate because the 
 
 For a future live deployment, add server-only secrets in Vercel project settings, implement authenticated API routes/server actions around the service abstraction, validate webhook signatures using the separate signing secret, and keep payout submission behind an explicit operational approval step.
 
+The repository also includes a GitHub Pages workflow for the static demo build. It publishes with `NEXT_PUBLIC_APP_MODE=demo` and does not receive or expose Blaaiz credentials.
+
 ## Tech stack
 
 Next.js App Router, TypeScript, Tailwind CSS, Lucide icons, typed validation, and `localStorage` persistence. No database or authentication is required for the demo.
