@@ -2,6 +2,9 @@
 
 BorderFlow is a polished, demo-first cross-border payout tracker built for the Blaaiz Buildathon. It gives operations teams a clear view of payout estimates, recipients, transaction status, and the full simulated lifecycle—without sending real money.
 
+- **Live demo:** https://dayz-tech-co.github.io/borderflow-blaaiz-buildathon/
+- **Repository:** https://github.com/Dayz-tech-co/borderflow-blaaiz-buildathon
+
 > **Important:** BorderFlow starts in **DEMO MODE**. Rates and fees shown in the interface are illustrative, editable assumptions. Creating or advancing a payout only changes data in the current browser's `localStorage`; it never calls a Blaaiz payout endpoint.
 
 ## Hackathon submission description
