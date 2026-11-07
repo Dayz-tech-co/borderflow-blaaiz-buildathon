@@ -36,7 +36,7 @@ See [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## Local setup
 
-Requirements: Node.js 20.9+ and npm.
+Requirements: Node.js 22+ and npm.
 
 ```bash
 npm ci
