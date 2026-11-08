@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: borderflow-testnet-backend
+    runtime: node
+    plan: 0.5c-512mb
+    branch: feat/stellar-settlement-baseline
+    numInstances: 1
+    autoDeployTrigger: off
+    buildCommand: npm ci && npm run build
+    startCommand: npm run start
+    healthCheckPath: /api/ready
+    disk:
+      name: borderflow-data
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: STELLAR_NETWORK
+        value: testnet
+      - key: STELLAR_HORIZON_URL
+        value: https://horizon-testnet.stellar.org
+      - key: BORDERFLOW_DATABASE_PATH
+        value: /var/data/borderflow.sqlite
+      - key: BORDERFLOW_BACKUP_DIRECTORY
+        value: /var/data/backups
+      - key: BORDERFLOW_MAX_PAYOUT_XLM
+        value: "10"
+      - key: BORDERFLOW_SETTLEMENT_ENABLED
+        value: "false"
+      - key: BORDERFLOW_ADMIN_TOKEN
+        sync: false

@@ -37,7 +37,9 @@ export function BorderFlowApp() {
       <div className="page-wrap">
         {view === "dashboard" && <Dashboard payouts={payouts} volume={volume} ready={ready} go={go} open={setSelected} />}
         {view === "calculator" && <PayoutCalculator onCreate={() => go("create")} />}
-        {view === "create" && <CreatePayout addPayout={(p) => { addPayout(p); setSelected(p); }} />}
+        {view === "create" && <>
+          <CreatePayout addPayout={(p) => { addPayout(p); setSelected(p); }} />
+        </>}
         {view === "history" && <TransactionHistory payouts={payouts} ready={ready} open={setSelected} reset={reset} />}
       </div>
     </main>
