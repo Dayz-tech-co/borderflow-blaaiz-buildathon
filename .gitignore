@@ -1,7 +1,11 @@
 node_modules/
 .next/
 out/
-.env*
 !.env.example
 *.tsbuildinfo
 .vercel/
+data/*.db
+data/*.sqlite*
+*.key
+*.secret
+config.bat
