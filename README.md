@@ -96,6 +96,16 @@ On 2026-11-07, BorderFlow completed a controlled Testnet XLM payout rehearsal fo
 - Testnet only; no real funds were used.
 - This is not production validation.
 
+## Controlled Testnet rehearsal
+
+On 2026-11-08, BorderFlow submitted and reconciled one controlled payment of 0.1 XLM on Stellar Testnet. BorderFlow payout `526605b8-1981-4069-bdfe-e96ad3b6a2a2` reached `confirmed` with transaction `591074a3c6a5fb45f40c5a3d91765ab885a19a9462e6610fd2876a27593b2ce2` on ledger `5619904`.
+
+- [Stellar Expert Testnet transaction](https://stellar.expert/explorer/testnet/tx/591074a3c6a5fb45f40c5a3d91765ab885a19a9462e6610fd2876a27593b2ce2)
+- Direct Horizon verification reported a successful native XLM payment for exactly 0.1 XLM to the dedicated recipient.
+- BorderFlow reconciliation persisted the confirmed status, ledger, and timestamps across a backend restart.
+- Replaying the identical idempotent request returned the same payout and transaction; changing the amount with the same key returned HTTP 409. No second transaction was submitted by either replay.
+- Testnet only; no real funds and no Mainnet were used. This is controlled development evidence, not production validation.
+
 ## Limitations
 
 - Testnet only
